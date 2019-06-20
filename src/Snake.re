@@ -33,8 +33,12 @@ let collidesWithSelf = (snake: t): bool => {
   | None => false
   | Some(snakeHead) =>
     snake.segments
-    |> MyUtils.any(p => p != snakeHead && MyUtils.isColliding(p, snakeHead))
+    |> MyUtils.any(p => p !== snakeHead && MyUtils.isColliding(p, snakeHead))
   };
+};
+
+let turn = (direction, snake: t) => {
+  {...snake, direction};
 };
 
 let draw = (snake, env) => {

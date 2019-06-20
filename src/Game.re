@@ -74,7 +74,7 @@ let makeStep = state => {
 };
 
 let drawDeadMessage = (_state, env) => {
-  let text = "You dead!";
+  let text = "You dead! Q to restart.";
   let w = Reprocessing.Draw.textWidth(~body=text, env);
   Reprocessing.Draw.text(
     ~body=text,
