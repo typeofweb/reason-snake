@@ -41,7 +41,7 @@ let initialState = {
   step: false,
   points: 0,
   snake: {
-    segments: [(0, 0), (0, 1), (0, 2)],
+    segments: [(0, 0)],
     direction: Bottom,
   },
   apple: None,
@@ -95,7 +95,11 @@ let collidesWithSelf = (segments): bool => {
 let moveSnake = ({segments, direction}, didCollectApple) => {
   // (0, 1), (0, 2)
   let [(tailX, tailY), ...xs] = segments;
-  let (x, y) = List.nth(xs, List.length(xs) - 1);
+  let (x, y) =
+    switch (xs) {
+    | [] => (tailX, tailY)
+    | _ => List.nth(xs, List.length(xs) - 1)
+    };
 
   let (dx, dy) = directionToVector(direction);
   let newPosition = (x + dx, y + dy);

@@ -6,8 +6,9 @@
   "scripts": {
     "start": "./lib/bs/bytecode/indexhot.byte",
     "start:native": "./lib/bs/native/index.native",
+    "start:web": "npm run build:web -- -w",
     "build": "bsb -make-world",
-    "build:web": "bsb -make-world -backend js",
+    "build:web": "bsb -make-world -backend js && webpack --mode=production",
     "build:native": "bsb -make-world -backend native",
     "build:all": "npm run clean && npm run build && npm run build:web && npm run build:native",
     "clean": "bsb -clean-world"
@@ -16,8 +17,11 @@
   "author": "Michał Miszczyszyn <michal@mmiszy.pl> (https://typeofweb.com/)",
   "license": "ISC",
   "devDependencies": {
+    "bs-platform": "npm:bsb-native@4.0.1100",
     "bsb-native": "4.0.1100",
-    "bs-platform": "npm:bsb-native@4.0.1100"
+    "webpack": "4.35.0",
+    "webpack-cli": "3.3.4",
+    "webpack-dev-server": "3.7.2"
   },
   "dependencies": {
     "reprocessing": "0.3.1"
