@@ -10,8 +10,7 @@ module.exports = {
   devServer: {
     hot: true,
     injectHot: true,
-    contentBase: path.join(__dirname, "."),
-    publicPath: "/web/"
+    contentBase: path.join(__dirname, "web")
   },
   watchOptions: {
     ignored: ["src/**/*.*", "node_modules"]
