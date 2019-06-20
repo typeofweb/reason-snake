@@ -9,13 +9,15 @@
     "build": "bsb -make-world",
     "build:web": "bsb -make-world -backend js",
     "build:native": "bsb -make-world -backend native",
+    "build:all": "npm run clean && npm run build && npm run build:web && npm run build:native",
     "clean": "bsb -clean-world"
   },
   "keywords": [],
   "author": "Michał Miszczyszyn <michal@mmiszy.pl> (https://typeofweb.com/)",
   "license": "ISC",
   "devDependencies": {
-    "bsb-native": "4.0.1100"
+    "bsb-native": "4.0.1100",
+    "bs-platform": "npm:bsb-native@4.0.1100"
   },
   "dependencies": {
     "reprocessing": "0.3.1"
