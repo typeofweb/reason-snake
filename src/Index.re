@@ -25,11 +25,19 @@ type gameState = {
   points: int,
   snake,
   apple,
+  isPlaying: bool,
+};
+
+let getSpeedFromPoints = (points: int): float => {
+  // 0 -> 0.2
+  // 20 -> 0.1
+  // 100 -> 0.05
+  0.2 -. 0.0325 *. log(float_of_int(points + 1));
 };
 
 let initialState = {
   clock: 0.0,
-  speed: 0.1,
+  speed: getSpeedFromPoints(0),
   step: false,
   points: 0,
   snake: {
@@ -37,6 +45,7 @@ let initialState = {
     direction: Bottom,
   },
   apple: None,
+  isPlaying: true,
 };
 
 let setup = (env): gameState => {
@@ -60,8 +69,11 @@ let drawSquare = (~pos: (int, int), ~color, env) => {
   Draw.rect(~pos, ~width=gridSize, ~height=gridSize, env);
 };
 
-let isInBoard = ((x, y)): bool => {
-  x >= 0 && y >= 0 && x < boardSize && y < boardSize;
+let isInBoard = (segments): bool => {
+  segments
+  |> MyUtils.every(((x, y)) =>
+       x >= 0 && y >= 0 && x < boardSize && y < boardSize
+     );
 };
 
 let directionToVector = direction =>
@@ -76,8 +88,8 @@ let isColliding = ((ax, ay), (bx, by)) => {
   ax == bx && ay == by;
 };
 
-let collidesWithSelf = (newPosition, segments): bool => {
-  segments |> MyUtils.any(isColliding(newPosition));
+let collidesWithSelf = (segments): bool => {
+  List.tl(segments) |> MyUtils.any(isColliding(List.hd(segments)));
 };
 
 let moveSnake = ({segments, direction}, didCollectApple) => {
@@ -88,21 +100,9 @@ let moveSnake = ({segments, direction}, didCollectApple) => {
   let (dx, dy) = directionToVector(direction);
   let newPosition = (x + dx, y + dy);
 
-  switch (
-    collidesWithSelf(newPosition, segments),
-    isInBoard(newPosition),
-    didCollectApple,
-  ) {
-  | (true, _, _)
-  | (_, false, _) => {
-      segments,
-      direction // @todo lose
-    }
-  | (_, _, false) => {segments: xs @ [newPosition], direction}
-  | (_, _, true) => {
-      segments: [(tailX, tailY)] @ xs @ [newPosition],
-      direction,
-    }
+  switch (didCollectApple) {
+  | false => {segments: xs @ [newPosition], direction}
+  | true => {segments: [(tailX, tailY)] @ xs @ [newPosition], direction}
   };
 };
 
@@ -124,13 +124,25 @@ let didCollectApple = (state): bool => {
 let makeStep = (state): gameState => {
   let collectedApple = didCollectApple(state);
   let movedSnake = moveSnake(state.snake, collectedApple);
-  let newApple =
-    switch (state.apple) {
-    | Some(_) when collectedApple == false => state.apple
-    | _ => makeApple()
+  let canMove =
+    !collidesWithSelf(movedSnake.segments) && isInBoard(movedSnake.segments);
+  if (!canMove) {
+    {...state, isPlaying: false};
+  } else {
+    let newApple =
+      switch (state.apple) {
+      | Some(_) when collectedApple == false => state.apple
+      | _ => makeApple()
+      };
+    let points = collectedApple ? state.points + 1 : state.points;
+    {
+      ...state,
+      points,
+      speed: getSpeedFromPoints(points),
+      snake: movedSnake,
+      apple: newApple,
     };
-  let points = collectedApple ? state.points + 1 : state.points;
-  {...state, points, snake: movedSnake, apple: newApple};
+  };
 };
 
 let drawSnake = (state, env) => {
@@ -156,37 +168,54 @@ let draw = (state, env) => {
 
   Draw.text(~body=string_of_int(state.points), ~pos=(0, 0), env);
 
-  if (state.step) {
-    makeStep(state)->updateClock(env);
-  } else {
-    updateClock(state, env);
-  };
+  let newState =
+    if (!state.isPlaying) {
+      let text = "You dead!";
+      let w = Draw.textWidth(~body=text, env);
+      Draw.text(
+        ~body=text,
+        ~pos=(
+          boardSize * gridSize / 2 - w / 2,
+          boardSize * gridSize / 2 - 30,
+        ),
+        env,
+      );
+      state;
+    } else if (state.step) {
+      makeStep(state);
+    } else {
+      state;
+    };
+
+  newState->updateClock(env);
 };
 
-let keyTyped = (state, env) => {
+let keyTyped = (state: gameState, env): gameState => {
+  let direction = state.snake.direction;
+
   switch (Env.keyCode(env)) {
-  | Events.Up => {
+  | Events.Up when direction == Left || direction == Right => {
       ...state,
       snake: {
         ...state.snake,
         direction: Top,
       },
     }
-  | Events.Right => {
+  | Events.Right when direction == Top || direction == Bottom => {
       ...state,
       snake: {
         ...state.snake,
         direction: Right,
       },
     }
-  | Events.Down => {
+  | Events.Down when direction == Left || direction == Right => {
       ...state,
       snake: {
         ...state.snake,
         direction: Bottom,
       },
     }
-  | Events.Left => {
+  | Events.Left when direction == Top || direction == Bottom => {
       ...state,
       snake: {
         ...state.snake,
