@@ -1,5 +1,8 @@
 open Reprocessing;
 
+let boardSize = 30;
+let gridSize = 20;
+
 type direction =
   | Top
   | Right
@@ -10,25 +13,35 @@ type position = (int, int);
 
 type apple = option(position);
 
+type snake = {
+  segments: list(position),
+  direction,
+};
+
 type gameState = {
   clock: float,
   speed: float,
   step: bool,
-  snakePosition: position,
-  snakeDirection: direction,
+  points: int,
+  snake,
   apple,
 };
 
+let initialState = {
+  clock: 0.0,
+  speed: 0.1,
+  step: false,
+  points: 0,
+  snake: {
+    segments: [(0, 0), (0, 1), (0, 2)],
+    direction: Bottom,
+  },
+  apple: None,
+};
+
 let setup = (env): gameState => {
-  Env.size(~width=600, ~height=600, env);
-  {
-    clock: 0.0,
-    speed: 0.5,
-    step: false,
-    snakePosition: (0, 0),
-    snakeDirection: Bottom,
-    apple: None,
-  };
+  Env.size(~width=boardSize * gridSize, ~height=boardSize * gridSize, env);
+  initialState;
 };
 
 let updateClock = (state, env): gameState => {
@@ -42,56 +55,106 @@ let updateClock = (state, env): gameState => {
   };
 };
 
-let drawSquare = (~pos: (int, int), env) => {
-  Draw.rect(~pos, ~width=10, ~height=10, env);
+let drawSquare = (~pos: (int, int), ~color, env) => {
+  Draw.fill(color, env);
+  Draw.rect(~pos, ~width=gridSize, ~height=gridSize, env);
 };
 
 let isInBoard = ((x, y)): bool => {
-  x >= 0 && y >= 0 && x <= 600 && y <= 600;
+  x >= 0 && y >= 0 && x < boardSize && y < boardSize;
 };
 
-let move = (position, direction) => {
-  let (x, y) = position;
-  let (dx, dy) =
-    switch (direction) {
-    | Top => (0, (-1))
-    | Right => (1, 0)
-    | Bottom => (0, 1)
-    | Left => ((-1), 0)
-    };
-  let newPosition = (x + 10 * dx, y + 10 * dy);
+let directionToVector = direction =>
+  switch (direction) {
+  | Top => (0, (-1))
+  | Right => (1, 0)
+  | Bottom => (0, 1)
+  | Left => ((-1), 0)
+  };
 
-  if (isInBoard(newPosition)) {
-    newPosition;
-  } else {
-    position;
+let isColliding = ((ax, ay), (bx, by)) => {
+  ax == bx && ay == by;
+};
+
+let collidesWithSelf = (newPosition, segments): bool => {
+  segments |> MyUtils.any(isColliding(newPosition));
+};
+
+let moveSnake = ({segments, direction}, didCollectApple) => {
+  // (0, 1), (0, 2)
+  let [(tailX, tailY), ...xs] = segments;
+  let (x, y) = List.nth(xs, List.length(xs) - 1);
+
+  let (dx, dy) = directionToVector(direction);
+  let newPosition = (x + dx, y + dy);
+
+  switch (
+    collidesWithSelf(newPosition, segments),
+    isInBoard(newPosition),
+    didCollectApple,
+  ) {
+  | (true, _, _)
+  | (_, false, _) => {
+      segments,
+      direction // @todo lose
+    }
+  | (_, _, false) => {segments: xs @ [newPosition], direction}
+  | (_, _, true) => {
+      segments: [(tailX, tailY)] @ xs @ [newPosition],
+      direction,
+    }
   };
 };
 
 let makeApple = () => {
-  Some((Utils.random(~min=0, ~max=600), Utils.random(~min=0, ~max=600)));
+  Some((
+    Utils.random(~min=0, ~max=boardSize),
+    Utils.random(~min=0, ~max=boardSize),
+  ));
+};
+
+let didCollectApple = (state): bool => {
+  let {snake, apple} = state;
+  switch (apple) {
+  | None => false
+  | Some(a) => snake.segments |> MyUtils.any(isColliding(a))
+  };
 };
 
 let makeStep = (state): gameState => {
-  let newPosition = move(state.snakePosition, state.snakeDirection);
+  let collectedApple = didCollectApple(state);
+  let movedSnake = moveSnake(state.snake, collectedApple);
   let newApple =
     switch (state.apple) {
-    | None => makeApple()
-    | Some(_) => state.apple
+    | Some(_) when collectedApple == false => state.apple
+    | _ => makeApple()
     };
-  {...state, snakePosition: newPosition, apple: newApple};
+  let points = collectedApple ? state.points + 1 : state.points;
+  {...state, points, snake: movedSnake, apple: newApple};
+};
+
+let drawSnake = (state, env) => {
+  state.snake.segments
+  |> List.iter(((x, y)) =>
+       drawSquare(~pos=(gridSize * x, gridSize * y), ~color=Color.snake, env)
+     );
+};
+
+let drawApple = (state, env) => {
+  switch (state.apple) {
+  | Some(pos) =>
+    let (x, y) = pos;
+    drawSquare(~pos=(gridSize * x, gridSize * y), ~color=Color.apple, env);
+  | _ => ()
+  };
 };
 
 let draw = (state, env) => {
-  Draw.background(Utils.color(~r=255, ~g=217, ~b=229, ~a=255), env);
-  Draw.fill(Utils.color(~r=41, ~g=166, ~b=244, ~a=255), env);
-  Draw.rect(~pos=(150, 150), ~width=300, ~height=300, env);
-  drawSquare(~pos=state.snakePosition, env);
+  Draw.background(Color.background, env);
+  drawApple(state, env);
+  drawSnake(state, env);
 
-  switch (state.apple) {
-  | Some(pos) => drawSquare(~pos, env)
-  | None => ()
-  };
+  Draw.text(~body=string_of_int(state.points), ~pos=(0, 0), env);
 
   if (state.step) {
     makeStep(state)->updateClock(env);
@@ -102,10 +165,35 @@ let draw = (state, env) => {
 
 let keyTyped = (state, env) => {
   switch (Env.keyCode(env)) {
-  | Events.Up => {...state, snakeDirection: Top}
-  | Events.Right => {...state, snakeDirection: Right}
-  | Events.Down => {...state, snakeDirection: Bottom}
-  | Events.Left => {...state, snakeDirection: Left}
+  | Events.Up => {
+      ...state,
+      snake: {
+        ...state.snake,
+        direction: Top,
+      },
+    }
+  | Events.Right => {
+      ...state,
+      snake: {
+        ...state.snake,
+        direction: Right,
+      },
+    }
+  | Events.Down => {
+      ...state,
+      snake: {
+        ...state.snake,
+        direction: Bottom,
+      },
+    }
+  | Events.Left => {
+      ...state,
+      snake: {
+        ...state.snake,
+        direction: Left,
+      },
+    }
+  | Events.Q => initialState
   | _ => state
   };
 };
