@@ -1,43 +1,32 @@
-type t = {
-  clock: float,
-  speed: float,
-  step: bool,
-  points: int,
-  snake: Snake.t,
-  apple: Apple.t,
-  isPlaying: bool,
-};
-
-let getSpeedFromPoints = (points: int): float => {
-  // 0 -> 0.2
-  // 20 -> 0.1
-  // 100 -> 0.05
-  0.2 -. 0.0325 *. log(float_of_int(points + 1));
-};
-
-let initialState: t = {
-  clock: 0.0,
-  speed: getSpeedFromPoints(0),
-  step: false,
-  points: 0,
-  snake: {
-    segments: [(0, 0)],
-    direction: `Down,
-  },
-  apple: None,
-  isPlaying: true,
-};
-
-let setup = (env): t => {
+let setup = (env): Exercises.gameState => {
   Reprocessing.Env.size(
     ~width=Board.size * Board.gridSize,
     ~height=Board.size * Board.gridSize,
     env,
   );
-  initialState;
+  Exercises.initialState;
 };
 
-let updateClock = (env, state): t => {
+let makeStep = (state: Exercises.gameState) => {
+  let collectedApple = state.snake |> Exercises.didCollectApple(state.apple);
+  let movedSnake = state.snake |> Exercises.moveSnake(collectedApple);
+  let canMove =
+    !Exercises.collidesWithSelf(movedSnake)
+    && Exercises.isInBoard(movedSnake.segments);
+  if (!canMove) {
+    {...state, isPlaying: false};
+  } else {
+    let newApple =
+      switch (state.apple) {
+      | Some(_) when collectedApple == false => state.apple
+      | _ => Exercises.makeApple()
+      };
+    let points = collectedApple ? state.points + 1 : state.points;
+    {...state, points, snake: movedSnake, apple: newApple};
+  };
+};
+
+let updateClock = (env, state: Exercises.gameState): Exercises.gameState => {
   let delta = Reprocessing.Env.deltaTime(env);
   let clock = state.clock +. delta;
 
@@ -48,62 +37,16 @@ let updateClock = (env, state): t => {
   };
 };
 
-let makeStep = state => {
-  let collectedApple = state.snake |> Snake.didCollectApple(state.apple);
-  let movedSnake = state.snake |> Snake.move(collectedApple);
-  let canMove =
-    !Snake.collidesWithSelf(movedSnake)
-    && MyUtils.isInBoard(movedSnake.segments);
-  if (!canMove) {
-    {...state, isPlaying: false};
-  } else {
-    let newApple =
-      switch (state.apple) {
-      | Some(_) when collectedApple == false => state.apple
-      | _ => Apple.make()
-      };
-    let points = collectedApple ? state.points + 1 : state.points;
-    {
-      ...state,
-      points,
-      speed: getSpeedFromPoints(points),
-      snake: movedSnake,
-      apple: newApple,
-    };
-  };
-};
-
-let drawDeadMessage = (_state, env) => {
-  let text = "You dead! Q to restart.";
-  let w = Reprocessing.Draw.textWidth(~body=text, env);
-  Reprocessing.Draw.text(
-    ~body=text,
-    ~pos=(
-      Board.size * Board.gridSize / 2 - w / 2,
-      Board.size * Board.gridSize / 2 - 30,
-    ),
-    env,
-  );
-};
-
-let drawPoints = (state, env) => {
-  Reprocessing.Draw.text(
-    ~body=string_of_int(state.points),
-    ~pos=(0, 0),
-    env,
-  );
-};
-
-let draw = (state, env) => {
+let draw = (state: Exercises.gameState, env) => {
   Reprocessing.Draw.background(Color.background, env);
-  state.apple->Apple.draw(env);
-  state.snake->Snake.draw(env);
+  state.apple->Exercises.drawApple(env);
+  state.snake->Exercises.drawSnake(env);
 
-  drawPoints(state, env);
+  Exercises.drawPoints(state, env);
 
   let newState =
     if (!state.isPlaying) {
-      drawDeadMessage(state, env);
+      Exercises.drawDeadMessage(state, env);
       state;
     } else if (state.step) {
       makeStep(state);
