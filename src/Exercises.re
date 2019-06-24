@@ -124,7 +124,9 @@ let isSquareInBoard = ((x, y)) => {
 // Implement a function which checks if segments are inside the board. Use `MyUtils.every`
 // Hint 1: Reuse `isSquareInBoard`
 
-let isInBoard = segments => true;
+let isInBoard = segments => {
+  MyUtils.every(isSquareInBoard, segments);
+};
 
 // # 8
 // When you hit the arrow keys, your snake should turn. Implement just that!
