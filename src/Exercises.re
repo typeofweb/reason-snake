@@ -115,7 +115,9 @@ let moveSnake = (collectedApple, snake: snake): snake => {
 // Hint 1: Use `Board.size`
 // Hint 2: Destructure `square`
 
-let isSquareInBoard = ((x, y)) => true;
+let isSquareInBoard = ((x, y)) => {
+  x >= 0 && x < Board.size && y >= 0 && y < Board.size;
+};
 
 // # 7
 // However, snake won't be a single square. It'll be a list of such squares (we'll call it segments).
