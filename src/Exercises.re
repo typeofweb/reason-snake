@@ -52,7 +52,14 @@ let drawSquare = (~pos, ~color, env) => {
 // More drawing! Draw snake. For each of its segments, draw a square.
 // Hint 1: Use `List.iter`, `drawSquare` and `Color.snake`.
 
-let drawSnake = (snake: snake, env) => ();
+let drawSnake = (snake: snake, env) => {
+  snake.segments
+  |> List.iter(pos => {
+       drawSquare(~pos, ~color=Color.snake, env);
+       ();
+     });
+  ();
+};
 
 // # 3
 // We need to be able to extend snake in to the direction it's moving.
