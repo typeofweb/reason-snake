@@ -103,7 +103,10 @@ let moveSegments = (direction: MyUtils.direction, segments) =>
 // implement movement of the snake.
 // Hint 1: When apple was collected just extend the snake
 
-let moveSnake = (collectedApple, snake: snake): snake => snake;
+let moveSnake = (collectedApple, snake: snake): snake => {
+  let fn = collectedApple ? extendSegments : moveSegments;
+  {...snake, segments: fn(snake.direction, snake.segments)};
+};
 
 // # 6
 // When snake hits the wall, it dies.
