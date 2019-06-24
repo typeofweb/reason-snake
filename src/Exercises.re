@@ -217,7 +217,13 @@ let didCollectApple = (apple, snake) => {
 // # 13
 // Display the amount of point on the screen.
 // Hint 1: Use `Reprocessing.Draw.text` and `string_of_int`
-let drawPoints = (state: gameState, env) => ();
+let drawPoints = (state: gameState, env) => {
+  Reprocessing.Draw.text(
+    ~pos=(0, 0),
+    ~body=string_of_int(state.points),
+    env,
+  );
+};
 
 // # 14
 // We need to display a message when snake dies.
