@@ -95,7 +95,8 @@ let getTail = segments => {
 // That's exactly what we need to implement here.
 // Hint 1: Use extendSegments and then chop off the tail.
 
-let moveSegments = (direction: MyUtils.direction, segments) => segments;
+let moveSegments = (direction: MyUtils.direction, segments) =>
+  getTail(extendSegments(direction, segments));
 
 // # 5
 // Now we need to really move our snake ;) Using functions such as `extendSegments` and `moveSegments`,
