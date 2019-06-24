@@ -179,7 +179,12 @@ let makeApple = () => {
 // Hint 1: Use `Color.apple`.
 // Hint 2: You need to pattern match the apple because it could be None
 
-let drawApple = (apple, env) => ();
+let drawApple = (apple, env) => {
+  switch (apple) {
+  | Some(a) => drawSquare(~pos=a, ~color=Color.apple, env)
+  | _ => ()
+  };
+};
 
 // # 12
 // It's time to implement collisions! We need to know when our snake hits an apple (which is good
