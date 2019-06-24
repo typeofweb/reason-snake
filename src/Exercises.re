@@ -70,9 +70,25 @@ let drawSnake = (snake: snake, env) => {
 // Hint 2: It could be one of the following values: [ | `Up | `Right | `Down | `Left ];
 // Hint 3: Use `MyUtils.getLastElement`
 
-let extendSegments = (direction: MyUtils.direction, segments) => segments;
+let extendSegments = (direction: MyUtils.direction, segments) => {
+  let (x, y) = MyUtils.getLastElement(segments);
+  let (dx, dy) =
+    switch (direction) {
+    | `Up => (0, (-1))
+    | `Right => (1, 0)
+    | `Down => (0, 1)
+    | `Left => ((-1), 0)
+    };
 
-let getTail = segments => segments;
+  segments @ [(x + dx, y + dy)];
+};
+
+let getTail = segments => {
+  switch (segments) {
+  | [_] => segments
+  | _ => List.tl(segments)
+  };
+};
 
 // # 4
 // Moving the Snake can be represented as extending in one direction and then removing the tail.
