@@ -166,7 +166,13 @@ let handleKeyTyped = (state: gameState, env): gameState => {
 // Hint 1: Use `Reprocessing.Utils.random`
 // Hint 2: Use `Board.size`
 
-let makeApple = () => Some((0, 0));
+let makeApple = () => {
+  let (x, y) = (
+    Reprocessing.Utils.random(~min=0, ~max=Board.size),
+    Reprocessing.Utils.random(~min=0, ~max=Board.size),
+  );
+  Some((x, y));
+};
 
 // # 11
 // Even more drawing ;) The apple we just created — you need to draw it too!
