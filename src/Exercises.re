@@ -130,7 +130,9 @@ let isInBoard = segments => {
 
 // # 8
 // When you hit the arrow keys, your snake should turn. Implement just that!
-let turnSnake = (direction, snake: snake): snake => snake;
+let turnSnake = (direction, snake: snake): snake => {
+  {...snake, direction};
+};
 
 // # 9
 // You need to handle user events — when they press up, right, down or left arrow keys.
