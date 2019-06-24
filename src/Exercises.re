@@ -37,7 +37,16 @@ let initialState: gameState = {
 // # 1
 // Let's start with some drawing ;) Draw a square. This function will be used for drawing the snake and apples.
 // Hint 1: Use `Reprocessing.Draw.fill`, `Reprocessing.Draw.rect` and `Board.gridSize`
-let drawSquare = (~pos, ~color, env) => ();
+let drawSquare = (~pos, ~color, env) => {
+  let (x, y) = pos;
+  Reprocessing.Draw.fill(color, env);
+  Reprocessing.Draw.rect(
+    ~pos=(x * Board.gridSize, y * Board.gridSize),
+    ~width=Board.gridSize,
+    ~height=Board.gridSize,
+    env,
+  );
+};
 
 // # 2
 // More drawing! Draw snake. For each of its segments, draw a square.
