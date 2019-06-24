@@ -140,7 +140,25 @@ let turnSnake = (direction, snake: snake): snake => {
 // Hint 2: Values are `Reprocessing.Events.Up` etc…
 // Hint 3: Take into account that snake can't turn left when it's going right etc.
 //
-let handleKeyTyped = (state: gameState, env): gameState => state;
+let handleKeyTyped = (state: gameState, env): gameState => {
+  switch (Reprocessing.Env.keyCode(env)) {
+  | Reprocessing.Events.Up => {...state, snake: turnSnake(`Up, state.snake)}
+  | Reprocessing.Events.Right => {
+      ...state,
+      snake: turnSnake(`Right, state.snake),
+    }
+  | Reprocessing.Events.Down => {
+      ...state,
+      snake: turnSnake(`Down, state.snake),
+    }
+  | Reprocessing.Events.Left => {
+      ...state,
+      snake: turnSnake(`Left, state.snake),
+    }
+  | Reprocessing.Events.Q => initialState
+  | _ => state
+  };
+};
 
 // # 10
 // On the board, apples should appear at random positions. Implement a function which makes some apples!
