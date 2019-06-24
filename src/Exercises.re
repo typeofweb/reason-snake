@@ -198,11 +198,21 @@ let drawApple = (apple, env) => {
 // Hint 3: Make sure you're not comparing a square with itself
 // Hint 4: You'll need to patternmatch on Apple because it can be Some(a) or None
 
-let isColliding = (a: square, b: square) => false;
+let isColliding = (a: square, b: square) => {
+  a == b && a !== b;
+};
 
-let collidesWithSelf = snake => false;
+let collidesWithSelf = snake => {
+  let head = MyUtils.getLastElement(snake.segments);
+  MyUtils.any(isColliding(head), snake.segments);
+};
 
-let didCollectApple = (apple, snake) => false;
+let didCollectApple = (apple, snake) => {
+  switch (apple) {
+  | Some(a) => isColliding(MyUtils.getLastElement(snake.segments), a)
+  | _ => false
+  };
+};
 
 // # 13
 // Display the amount of point on the screen.
