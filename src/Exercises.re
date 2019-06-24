@@ -228,7 +228,18 @@ let drawPoints = (state: gameState, env) => {
 // # 14
 // We need to display a message when snake dies.
 // Create a function which displays a message, similar to the one with points.
-let drawDeadMessage = (_state: gameState, env) => ();
+let drawDeadMessage = (_state: gameState, env) => {
+  let body = "You dead!";
+  Reprocessing.Draw.text(
+    ~pos=(
+      (Board.size * Board.gridSize - Reprocessing.Draw.textWidth(~body, env))
+      / 2,
+      Board.size * Board.gridSize / 2 - 30,
+    ),
+    ~body,
+    env,
+  );
+};
 
 // # 15
 // We're done! Open Game.re and Myutils.re to see how the "engine" of the game works.
