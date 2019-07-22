@@ -18,8 +18,7 @@
   "author": "Michał Miszczyszyn <michal@mmiszy.pl> (https://typeofweb.com/)",
   "license": "ISC",
   "devDependencies": {
-    "bs-platform": "npm:bsb-native@4.0.1100",
-    "bsb-native": "4.0.1100",
+    "bsb-native": "4.0.7000",
     "gh-pages": "2.0.1",
     "webpack": "4.35.0",
     "webpack-cli": "3.3.4",
